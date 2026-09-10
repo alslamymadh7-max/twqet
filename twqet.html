@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="توقيت">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>توقيت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef2f8;
+    --card:#ffffff;
+    --navy:#1e3a5f;
+    --navy-dark:#16304f;
+    --text:#1c2b3a;
+    --muted:#8695a7;
+    --border:#e6ebf2;
+    --danger:#d9534f;
+  }
+  *{box-sizing:border-box;
+    user-select:none; -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none;
+    -webkit-touch-callout:none;
+  }
+  body{
+    margin:0;
+    font-family:'Tajawal', sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    padding:24px 12px 60px;
+  }
+  .app{
+    width:100%;
+    max-width:460px;
+  }
+  .lang-switch{
+    display:flex; gap:8px; margin-bottom:16px;
+  }
+  .lang-btn{
+    flex:1; padding:9px; border-radius:14px; border:1px solid var(--border);
+    background:var(--card); color:var(--muted); font-family:inherit;
+    font-size:14px; font-weight:700; cursor:pointer; transition:.15s;
+  }
+  .lang-btn.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+
+  body.lang-en .title-block{ text-align:left; }
+  body.lang-en .progress-info{ text-align:left; margin-right:0; margin-left:20px; }
+  body.lang-en .task-main{ text-align:left; }
+  body.lang-en .field-input{ text-align:left; }
+  body.lang-en .time-row .field-input{ text-align:center; }
+  body.lang-ar .task-row{ flex-direction:row-reverse; }
+  body.lang-en .task-row{ flex-direction:row; }
+  .top-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .calendar-icon{
+    width:56px;height:56px;
+    background:#dbe7fb;
+    border-radius:18px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .calendar-icon svg{width:26px;height:26px;stroke:var(--navy);}
+  .title-block{ text-align:right; }
+  .eyebrow{ color:var(--muted); font-size:14px; margin-bottom:4px; }
+  .page-title{ font-size:34px; font-weight:800; margin:0 0 6px; color:var(--text); }
+  .date{ color:var(--muted); font-size:15px; }
+
+  .progress-card{
+    background:linear-gradient(160deg,var(--navy),var(--navy-dark));
+    border-radius:26px;
+    padding:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    color:#fff;
+    margin-bottom:24px;
+  }
+  .ring-wrap{ position:relative; width:96px; height:96px; flex-shrink:0; }
+  .ring-wrap svg{ transform:rotate(-90deg); }
+  .ring-pct{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800; color:var(--navy);
+  }
+  .progress-info{ text-align:right; flex:1; margin-right:20px; }
+  .progress-label{ font-size:15px; opacity:.85; margin-bottom:4px;}
+  .progress-count{ font-size:38px; font-weight:800; margin-bottom:10px; }
+  .progress-bar-track{
+    background:rgba(255,255,255,.18);
+    height:8px; border-radius:6px; overflow:hidden; margin-bottom:12px;
+  }
+  .progress-bar-fill{
+    height:100%; background:#fff; border-radius:6px; width:0%;
+    transition:width .35s ease;
+  }
+  .progress-note{ font-size:13px; opacity:.75; }
+
+  .section-header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .section-title{ font-size:22px; font-weight:800; }
+  .section-sub{ color:var(--muted); font-size:14px; margin-top:2px;}
+  .add-btn{
+    background:#dbe7fb; color:var(--navy);
+    border:none; border-radius:20px;
+    padding:8px 16px; font-size:14px; font-weight:700;
+    display:flex; align-items:center; gap:6px; cursor:pointer;
+    font-family:inherit;
+  }
+  .add-btn:active{ transform:scale(.97); }
+
+  .task-list{
+    background:var(--card);
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:0 6px 20px rgba(30,58,95,.06);
+    margin-bottom:20px;
+  }
+  .task-row{
+    display:flex; align-items:center; gap:14px;
+    padding:18px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .task-row:last-child{ border-bottom:none; }
+  .task-row.done .task-title{ text-decoration:line-through; color:var(--muted); }
+  .task-row.done .task-time{ color:var(--muted); }
+
+  .checkbox{
+    width:28px; height:28px;
+    border:2px solid #c9d4e0;
+    border-radius:9px;
+    flex-shrink:0;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    background:#fff;
+    transition:.15s;
+  }
+  .checkbox.checked{ background:var(--navy); border-color:var(--navy); }
+  .checkbox svg{ width:16px; height:16px; stroke:#fff; display:none; }
+  .checkbox.checked svg{ display:block; }
+
+  .edit-btn{
+    width:22px;height:22px; flex-shrink:0; cursor:pointer;
+    color:#9aa8b8; background:none; border:none; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .edit-btn svg{ width:19px; height:19px; }
+
+  .task-main{ flex:1; text-align:right; }
+  .task-title{ font-size:17px; font-weight:700; margin-bottom:2px; }
+  .task-time{ font-size:14px; color:var(--muted); direction:ltr; display:inline-block; }
+
+  .task-icon{
+    width:52px; height:52px; border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .task-icon svg{ width:24px; height:24px; }
+
+  .reset-btn{
+    width:100%; background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:16px; font-size:15px; font-weight:700; color:var(--text);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    cursor:pointer; font-family:inherit; margin-bottom:14px;
+  }
+  .reset-btn svg{ width:18px; height:18px; }
+
+  .footnote{ text-align:center; color:var(--muted); font-size:13px; }
+
+  .info-dot{
+    display:block; width:9px; height:9px; border-radius:50%;
+    background:rgba(30,58,95,.14); border:none; cursor:pointer;
+    margin:16px auto 0;
+  }
+  .info-modal{ text-align:center; }
+  .info-lines{
+    margin-top:8px; font-size:15px; line-height:2.1; color:var(--text);
+  }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(10,20,35,.45);
+    display:none; align-items:flex-end; justify-content:center;
+    z-index:50;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--bg);
+    width:100%; max-width:460px;
+    border-radius:28px 28px 0 0;
+    padding:26px 22px 30px;
+    animation:slideUp .25s ease;
+  }
+  @keyframes slideUp{ from{ transform:translateY(30px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .modal-title{ font-size:24px; font-weight:800; }
+  .close-x{
+    width:38px;height:38px; border-radius:12px; background:#e3e9f1; border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .close-x svg{ width:18px;height:18px; }
+  .modal-sub{ color:var(--muted); font-size:14px; margin-bottom:22px; }
+  .field-label{ font-size:15px; font-weight:700; margin-bottom:8px; }
+  .field-input{
+    width:100%; background:#fff; border:1px solid var(--border);
+    border-radius:16px; padding:15px 16px; font-size:16px;
+    font-family:inherit; color:var(--text); margin-bottom:18px;
+    text-align:right;
+  }
+  .field-input:focus{ outline:2px solid var(--navy); outline-offset:1px; }
+  .time-row{ display:flex; gap:10px; }
+  .time-row .field-input{ text-align:center; direction:ltr; }
+  .save-btn{
+    width:100%; background:var(--navy); color:#fff; border:none;
+    border-radius:18px; padding:17px; font-size:17px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    cursor:pointer; font-family:inherit; margin-top:6px; margin-bottom:14px;
+  }
+  .save-btn svg{ width:18px;height:18px; }
+  .delete-btn{
+    width:100%; background:#fdf1f0; color:var(--danger);
+    border:1px solid #f5d3d1; border-radius:18px; padding:15px;
+    font-size:16px; font-weight:700; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+  }
+  .delete-btn svg{ width:17px;height:17px; }
+
+  .icon-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:10px;
+    max-height:216px;
+    overflow-y:auto;
+    padding:4px 2px 18px;
+    margin-bottom:4px;
+  }
+  .icon-opt{
+    width:100%; aspect-ratio:1/1; border-radius:14px;
+    border:2px solid transparent;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0;
+  }
+  .icon-opt svg{ width:20px; height:20px; }
+  .icon-opt.selected{ border-color:var(--navy); box-shadow:0 0 0 3px rgba(30,58,95,.12); }
+</style>
+</head>
+<body dir="rtl" class="lang-ar">
+
+<div class="app">
+
+  <div class="lang-switch">
+    <button class="lang-btn" id="btnLangAr" onclick="setLanguage('ar')">العربية</button>
+    <button class="lang-btn" id="btnLangEn" onclick="setLanguage('en')">English</button>
+  </div>
+
+  <div class="top-row">
+    <div class="title-block">
+      <div class="eyebrow" id="eyebrowText">يوم جديد، خطوة جديدة</div>
+      <div class="page-title" id="titleText">توقيت</div>
+      <div class="date" id="dateLabel"></div>
+    </div>
+    <div class="calendar-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+    </div>
+  </div>
+
+  <div class="progress-card">
+    <div class="progress-info">
+      <div class="progress-label" id="progressLabelText">إنجاز اليوم</div>
+      <div class="progress-count"><span id="doneCount">0</span> / <span id="totalCount">0</span></div>
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="barFill"></div></div>
+      <div class="progress-note" id="progressNote">ابدأ بمهمة صغيرة، وستتبعها البقية.</div>
+    </div>
+    <div class="ring-wrap">
+      <svg width="96" height="96" viewBox="0 0 96 96">
+        <circle cx="48" cy="48" r="42" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="10"/>
+        <circle id="ringProgress" cx="48" cy="48" r="42" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264"/>
+      </svg>
+      <div class="ring-pct"><span id="pctLabel">0%</span></div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <div>
+      <div class="section-title" id="sectionTitleText">مهام اليوم</div>
+      <div class="section-sub"><span id="remainingCount">0</span> <span id="remainingLabelText">متبقية</span></div>
+
+    </div>
+    <button class="add-btn" onclick="openAddModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span id="addBtnText">مهمة جديدة</span>
+    </button>
+  </div>
+
+  <div class="task-list" id="taskList"></div>
+
+  <button class="reset-btn" onclick="resetDay()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    <span id="resetBtnText">إعادة ضبط اليوم</span>
+  </button>
+
+  <div class="footnote" id="footnoteText">يتم حفظ إنجازك تلقائياً على هذا الجهاز</div>
+  <button class="info-dot" onclick="openInfoModal()" aria-label="info"></button>
+</div>
+
+<!-- Info Modal -->
+<div class="overlay" id="infoOverlay">
+  <div class="modal info-modal">
+    <div class="modal-head" style="justify-content:center; position:relative;">
+      <div class="modal-title">معلومات التطبيق</div>
+      <button class="close-x" onclick="closeInfoModal()" style="position:absolute; left:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="info-lines">
+      <div>إنتاج : معاذ سعيد السلامي</div>
+      <div>تاريخ الاصدار : 5–9–2026</div>
+      <div>الاصدار : 1.0</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">تعديل المهمة</div>
+      <button class="close-x" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-sub" id="modalSubText">اكتب التفاصيل التي تناسب جدولك</div>
+
+    <div class="field-label" id="labelNameText">اسم المهمة</div>
+    <input type="text" class="field-input" id="inputName" placeholder="">
+
+    <div class="field-label" id="labelTimeText">الوقت</div>
+    <div class="time-row">
+      <input type="time" class="field-input" id="inputStart">
+      <input type="time" class="field-input" id="inputEnd">
+    </div>
+
+    <div class="field-label" id="labelIconText">أيقونة المهمة</div>
+    <div class="icon-grid" id="iconGrid"></div>
+
+    <button class="save-btn" onclick="saveTask()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      <span id="saveBtnText">حفظ التعديلات</span>
+    </button>
+    <button class="delete-btn" id="deleteBtn" onclick="deleteTask()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6h12z"/></svg>
+      <span id="deleteBtnText">حذف المهمة</span>
+    </button>
+  </div>
+</div>
+
+<script>
+['copy','cut','contextmenu','selectstart','dragstart'].forEach(evt=>{
+  document.addEventListener(evt, e => e.preventDefault());
+});
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+
+const PALETTE = [
+  ['#fbdcd5','#c0603f'], ['#fbe7b0','#a67a1e'], ['#cfe0f7','#3a5f8f'], ['#c9ecd7','#3f8f5f'],
+  ['#fbdcbb','#c0752f'], ['#e5dcf7','#6b4fa0'], ['#f9d7e6','#a8447a'], ['#d7f5f0','#2f8f82'],
+  ['#fdeccb','#b8862f'], ['#dbe9fb','#3a5f8f'], ['#e0e8f7','#3a5f8f'], ['#f6dede','#b04b4b']
+];
+
+const ICON_DEFS = [
+  { key:'book',      svg:'<path d="M4 5c3-2 6-2 8 0v14c-2-2-5-2-8 0V5z"/><path d="M20 5c-3-2-6-2-8 0v14c2-2 5-2 8 0V5z"/>' },
+  { key:'quran',      svg:'<path d="M12 6c-2-2-5-2-8 0v13c3-2 6-2 8 0"/><path d="M12 6c2-2 5-2 8 0v13c-3-2-6-2-8 0V6z"/>' },
+  { key:'mosque',     svg:'<path d="M12 2v4M8 8a4 4 0 0 1 8 0v3H8V8z"/><path d="M4 21v-7a2 2 0 0 1 1-1.7L12 8l7 4.3a2 2 0 0 1 1 1.7v7"/><path d="M4 21h16M10 21v-5h4v5"/>' },
+  { key:'pray',       svg:'<path d="M12 3v9"/><path d="M8 6c0 3 1.5 5 4 6 2.5-1 4-3 4-6"/><path d="M6 21c1-4 3-6 6-6s5 2 6 6"/>' },
+  { key:'coffee',     svg:'<path d="M4 9h13v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 3c0 1-1 1-1 2s1 1 1 2M11 3c0 1-1 1-1 2s1 1 1 2"/>' },
+  { key:'water',      svg:'<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>' },
+  { key:'apple',      svg:'<path d="M12 6c1-2 3-2 4-1"/><path d="M12 6c-4 0-7 3-7 8a8 8 0 0 0 8 8c2 0 3-1 4-1s2 1 4 1a8 8 0 0 0-1-15c-2 0-3 1-4 1s-2-1-4-1z"/>' },
+  { key:'pizza',      svg:'<path d="M3 6l9-3 9 3-9 15L3 6z"/><circle cx="12" cy="10" r="1"/><circle cx="9" cy="8" r="1"/><circle cx="15" cy="8" r="1"/>' },
+  { key:'cup',        svg:'<path d="M6 3h12l-1 12a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4L6 3z"/><path d="M9 21h6"/>' },
+  { key:'work',       svg:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>' },
+  { key:'home',       svg:'<path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/>' },
+  { key:'sun',        svg:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>' },
+  { key:'moon',       svg:'<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>' },
+  { key:'study',      svg:'<path d="M4 19V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 4v5h5"/>' },
+  { key:'edit',       svg:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>' },
+  { key:'play',       svg:'<circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/>' },
+  { key:'run',        svg:'<circle cx="14" cy="5" r="2"/><path d="M6 21l3-6 3 2 2-4 4 3"/><path d="M9 15l-3-3 4-3 3 3"/>' },
+  { key:'dumbbell',   svg:'<path d="M6 8v8M18 8v8"/><rect x="3" y="9" width="3" height="6" rx="1"/><rect x="18" y="9" width="3" height="6" rx="1"/><path d="M8 12h8"/>' },
+  { key:'bike',       svg:'<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h4l3 8M10 9h4M14 17l-2-6"/>' },
+  { key:'soccer',     svg:'<circle cx="12" cy="12" r="9"/><path d="M12 8l3 2-1 4H10l-1-4 3-2z"/>' },
+  { key:'basketball', svg:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a12 12 0 0 1 0 18M12 3a12 12 0 0 0 0 18"/>' },
+  { key:'swim',       svg:'<path d="M3 17c1.5 1.5 3 1.5 4.5 0s3-1.5 4.5 0 3 1.5 4.5 0 3-1.5 4.5 0"/><circle cx="17" cy="7" r="2"/><path d="M9 13l5-4 3 2-2 3"/>' },
+  { key:'music',      svg:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>' },
+  { key:'headphones', svg:'<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="2" y="14" width="4" height="6" rx="1"/><rect x="18" y="14" width="4" height="6" rx="1"/>' },
+  { key:'controller', svg:'<rect x="3" y="8" width="18" height="9" rx="4"/><path d="M8 11v3M6.5 12.5h3"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="13" r="1"/>' },
+  { key:'palette',    svg:'<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-.5-1.5-.5-2 1-1 2-1h1a4 4 0 0 0 4-4c0-5-3.5-9-8.5-9z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="8" r="1"/>' },
+  { key:'camera',     svg:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l2-3h4l2 3"/><circle cx="12" cy="13" r="4"/>' },
+  { key:'phone',      svg:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>' },
+  { key:'laptop',     svg:'<rect x="4" y="4" width="16" height="10" rx="1"/><path d="M2 18h20"/>' },
+  { key:'code',       svg:'<path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/>' },
+  { key:'chart',      svg:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>' },
+  { key:'calendar',   svg:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>' },
+  { key:'clock',      svg:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>' },
+  { key:'alarm',      svg:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M5 3L2 6M19 3l3 3"/>' },
+  { key:'bell',       svg:'<path d="M6 10a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/>' },
+  { key:'heart',      svg:'<path d="M12 20s-7-4.5-9.5-9C.7 7.8 2 4 5.5 4 8 4 9.5 6 12 8c2.5-2 4-4 6.5-4C22 4 23.3 7.8 21.5 11 19 15.5 12 20 12 20z"/>' },
+  { key:'pulse',      svg:'<path d="M3 12h4l2 6 4-12 2 6h6"/>' },
+  { key:'pill',       svg:'<rect x="3" y="10" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/><path d="M9 9l6 6"/>' },
+  { key:'tooth',      svg:'<path d="M12 3c-3 0-5 2-5 5 0 2 1 3 1 5s-1 3-1 5 1 3 2 3 2-3 3-3 2 3 3 3 2-1 2-3-1-3-1-5 1-3 1-5c0-3-2-5-5-5z"/>' },
+  { key:'bath',       svg:'<path d="M4 12h16v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-3z"/><path d="M7 12V6a2 2 0 0 1 3.5-1.3"/>' },
+  { key:'laundry',    svg:'<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="13" r="5"/><circle cx="7" cy="6" r="1"/>' },
+  { key:'broom',      svg:'<path d="M14 3l7 7-7 3-3-3 3-7z"/><path d="M10 13L4 19M4 19l0 2M4 19l2 0"/>' },
+  { key:'cart',       svg:'<circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/><path d="M3 4h2l2.4 12h9.2L19 8H6"/>' },
+  { key:'wallet',     svg:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h3v3h-3a1.5 1.5 0 0 1 0-3z"/><path d="M3 9h18"/>' },
+  { key:'gift',       svg:'<rect x="4" y="9" width="16" height="11" rx="1"/><path d="M4 9h16v4H4z"/><path d="M12 9v11M12 9c-1-3-4-4-4-1.5S10 9 12 9zM12 9c1-3 4-4 4-1.5S14 9 12 9z"/>' },
+  { key:'plane',      svg:'<path d="M3 13l9-3 7-7-2 7 4 2-9 3-3 6-2-6-4-2z"/>' },
+  { key:'car',        svg:'<path d="M4 16V11l2-5h12l2 5v5"/><rect x="2" y="16" width="20" height="4" rx="1"/><circle cx="7" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>' },
+  { key:'bus',        svg:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M3 12h18M7 8h2M15 8h2"/><circle cx="7" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>' },
+  { key:'tree',       svg:'<path d="M12 2l5 8h-3l4 6h-4v6h-4v-6H6l4-6H7l5-8z"/>' },
+  { key:'flower',     svg:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="12" r="2.5"/>' },
+  { key:'cloud',      svg:'<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A4.5 4.5 0 0 1 17 18H7z"/>' },
+  { key:'umbrella',   svg:'<path d="M3 12a9 9 0 0 1 18 0H3z"/><path d="M12 12v7a2 2 0 0 1-4 0"/>' },
+  { key:'star',       svg:'<path d="M12 3l2.6 5.8 6.4.6-4.8 4.2 1.4 6.2L12 16.9 6.4 19.8l1.4-6.2L3 9.4l6.4-.6L12 3z"/>' },
+  { key:'target',     svg:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>' },
+  { key:'trophy',     svg:'<path d="M8 4h8v4a4 4 0 0 1-8 0V4z"/><path d="M8 5H5a3 3 0 0 0 3 5M16 5h3a3 3 0 0 1-3 5"/><path d="M10 15h4v3h-4z"/><path d="M8 20h8"/>' },
+  { key:'checklist',  svg:'<path d="M4 6h2M4 12h2M4 18h2"/><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 5.5l1 1 1.5-2M3.5 11.5l1 1 1.5-2"/>' },
+  { key:'note',       svg:'<path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h4"/>' },
+  { key:'mail',       svg:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>' },
+  { key:'chat',       svg:'<path d="M4 5h16v11H8l-4 4V5z"/>' },
+  { key:'users',      svg:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c0-2 1.5-4 4-4"/>' },
+  { key:'baby',       svg:'<circle cx="12" cy="8" r="4"/><path d="M6 20c0-4 3-6 6-6s6 2 6 6"/>' },
+  { key:'dog',        svg:'<path d="M4 10c0-3 2-5 4-5l1 2h6l1-2c2 0 4 2 4 5v4a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6v-4z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/>' },
+  { key:'tv',         svg:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/>' },
+  { key:'film',       svg:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 15h18M9 4v16M15 4v16"/>' }
+];
+
+const ICONS = {};
+ICON_DEFS.forEach((d,i)=>{
+  const [bg,color] = PALETTE[i % PALETTE.length];
+  ICONS[d.key] = { bg, color, svg:d.svg };
+});
+
+let tasks = [
+  { id:1, nameAr:'حفظ القرآن', nameEn:'Quran Memorization', start:'05:30', end:'06:00', icon:'book', done:false },
+  { id:2, nameAr:'إفطار + الاستعداد', nameEn:'Breakfast + Getting Ready', start:'06:00', end:'06:45', icon:'coffee', done:false },
+  { id:3, nameAr:'المدرسة', nameEn:'School', start:'07:00', end:'13:30', icon:'work', done:false },
+  { id:4, nameAr:'العودة', nameEn:'Coming Home', start:'13:30', end:'14:00', icon:'home', done:false },
+  { id:5, nameAr:'الغداء', nameEn:'Lunch', start:'14:00', end:'14:30', icon:'sun', done:false },
+  { id:6, nameAr:'راحة', nameEn:'Rest', start:'14:30', end:'15:15', icon:'moon', done:false },
+  { id:7, nameAr:'مذاكرة + واجبات', nameEn:'Study + Homework', start:'15:15', end:'16:30', icon:'study', done:false },
+  { id:8, nameAr:'مراجعة الدراسة', nameEn:'Study Review', start:'18:30', end:'19:30', icon:'edit', done:false },
+  { id:9, nameAr:'وقت حر', nameEn:'Free Time', start:'20:30', end:'21:00', icon:'play', done:false },
+  { id:10, nameAr:'الاستعداد للنوم', nameEn:'Getting Ready for Bed', start:'21:00', end:'21:30', icon:'moon2', done:false },
+  { id:11, nameAr:'النوم', nameEn:'Sleep', start:'21:30', end:'', icon:'moon2', done:false }
+];
+
+const STRINGS = {
+  ar:{
+    eyebrow:'يوم جديد، خطوة جديدة', title:'توقيت', progressLabel:'إنجاز اليوم',
+    noteEmpty:'ابدأ بمهمة صغيرة، وستتبعها البقية.', noteMid:'أحسنت! استمر على هذا المنوال.', noteDone:'أنجزت كل مهامك اليوم 🎉',
+    sectionTitle:'مهام اليوم', remainingLabel:'متبقية', addBtn:'مهمة جديدة', resetBtn:'إعادة ضبط اليوم',
+    footnote:'يتم حفظ إنجازك تلقائياً على هذا الجهاز',
+    modalTitleAdd:'مهمة جديدة', modalTitleEdit:'تعديل المهمة', modalSub:'اكتب التفاصيل التي تناسب جدولك',
+    labelName:'اسم المهمة', labelTime:'الوقت', labelIcon:'أيقونة المهمة', placeholderName:'مثال: القراءة',
+    saveBtn:'حفظ التعديلات', deleteBtn:'حذف المهمة', dateLocale:'ar-EG-u-nu-latn'
+  },
+  en:{
+    eyebrow:'New day, new step', title:'Schedule', progressLabel:"Today's Progress",
+    noteEmpty:'Start with one small task — the rest will follow.', noteMid:"Nice work! Keep it up.", noteDone:'All tasks done for today 🎉',
+    sectionTitle:"Today's Tasks", remainingLabel:'remaining', addBtn:'New Task', resetBtn:'Reset Day',
+    footnote:'Your progress is saved automatically on this device',
+    modalTitleAdd:'New Task', modalTitleEdit:'Edit Task', modalSub:'Enter the details that fit your schedule',
+    labelName:'Task Name', labelTime:'Time', labelIcon:'Task Icon', placeholderName:'e.g. Reading',
+    saveBtn:'Save Changes', deleteBtn:'Delete Task', dateLocale:'en-US'
+  }
+};
+
+let LANG = 'ar';
+let editingId = null;
+let selectedIcon = 'study';
+const STORAGE_KEY = 'tawqeet_schedule_v1';
+
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, lastDate: todayKey(), lang: LANG }));
+  }catch(e){}
+}
+
+function getName(t){
+  return (LANG === 'ar' ? t.nameAr : t.nameEn) || t.nameAr || t.nameEn || '';
+}
+
+function applyStaticText(){
+  const s = STRINGS[LANG];
+  document.getElementById('eyebrowText').textContent = s.eyebrow;
+  document.getElementById('titleText').textContent = s.title;
+  document.getElementById('progressLabelText').textContent = s.progressLabel;
+  document.getElementById('sectionTitleText').textContent = s.sectionTitle;
+  document.getElementById('remainingLabelText').textContent = s.remainingLabel;
+  document.getElementById('addBtnText').textContent = s.addBtn;
+  document.getElementById('resetBtnText').textContent = s.resetBtn;
+  document.getElementById('footnoteText').textContent = s.footnote;
+  document.getElementById('modalSubText').textContent = s.modalSub;
+  document.getElementById('labelNameText').textContent = s.labelName;
+  document.getElementById('labelTimeText').textContent = s.labelTime;
+  document.getElementById('labelIconText').textContent = s.labelIcon;
+  document.getElementById('saveBtnText').textContent = s.saveBtn;
+  document.getElementById('deleteBtnText').textContent = s.deleteBtn;
+  document.getElementById('inputName').placeholder = s.placeholderName;
+  document.getElementById('modalTitle').textContent = editingId ? s.modalTitleEdit : s.modalTitleAdd;
+}
+
+function setLanguage(lang){
+  LANG = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.body.className = lang === 'ar' ? 'lang-ar' : 'lang-en';
+  document.getElementById('btnLangAr').classList.toggle('active', lang === 'ar');
+  document.getElementById('btnLangEn').classList.toggle('active', lang === 'en');
+  applyStaticText();
+  updateDateLabel();
+  render();
+}
+
+function renderIconGrid(){
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = '';
+  Object.keys(ICONS).forEach(key=>{
+    const ic = ICONS[key];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'icon-opt' + (key === selectedIcon ? ' selected' : '');
+    btn.style.background = ic.bg;
+    btn.style.color = ic.color;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg>`;
+    btn.onclick = ()=>{ selectedIcon = key; renderIconGrid(); };
+    grid.appendChild(btn);
+  });
+}
+
+function to12(t){
+  if(!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  const hh = ((h+11)%12)+1;
+  return `${hh}:${String(m).padStart(2,'0')}`;
+}
+
+function render(){
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+  tasks.forEach(t=>{
+    const ic = ICONS[t.icon] || ICONS.study;
+    const row = document.createElement('div');
+    row.className = 'task-row' + (t.done ? ' done' : '');
+    row.innerHTML = `
+      <div class="checkbox ${t.done?'checked':''}" onclick="toggleDone(${t.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <button class="edit-btn" onclick="openEditModal(${t.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </button>
+      <div class="task-main">
+        <div class="task-title">${getName(t)}</div>
+        <div class="task-time">${to12(t.start)}${t.end ? ' – ' + to12(t.end) : ''}</div>
+      </div>
+      <div class="task-icon" style="background:${ic.bg};color:${ic.color}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+  updateProgress();
+  saveState();
+}
+
+function updateProgress(){
+  const s = STRINGS[LANG];
+  const total = tasks.length;
+  const done = tasks.filter(t=>t.done).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('remainingCount').textContent = total - done;
+  document.getElementById('pctLabel').textContent = pct + '%';
+  document.getElementById('barFill').style.width = pct + '%';
+  const circumference = 264;
+  document.getElementById('ringProgress').style.strokeDashoffset = circumference - (circumference*pct/100);
+  const note = document.getElementById('progressNote');
+  if(pct === 0) note.textContent = s.noteEmpty;
+  else if(pct < 100) note.textContent = s.noteMid;
+  else note.textContent = s.noteDone;
+}
+
+function vibrate(pattern){
+  if(navigator.vibrate){
+    try{ navigator.vibrate(pattern); }catch(e){}
+  }
+}
+
+function toggleDone(id){
+  const t = tasks.find(x=>x.id===id);
+  const wasDone = t.done;
+  t.done = !t.done;
+  if(t.done && !wasDone){
+    if(tasks.every(x=>x.done)){
+      vibrate([50,40,50,40,160]);
+    } else {
+      vibrate(35);
+    }
+  }
+  render();
+}
+
+function openAddModal(){
+  editingId = null;
+  selectedIcon = 'study';
+  document.getElementById('modalTitle').textContent = STRINGS[LANG].modalTitleAdd;
+  document.getElementById('inputName').value = '';
+  document.getElementById('inputStart').value = '';
+  document.getElementById('inputEnd').value = '';
+  document.getElementById('deleteBtn').style.display = 'none';
+  renderIconGrid();
+  document.getElementById('overlay').classList.add('open');
+}
+
+function openEditModal(id){
+  editingId = id;
+  const t = tasks.find(x=>x.id===id);
+  selectedIcon = t.icon;
+  document.getElementById('modalTitle').textContent = STRINGS[LANG].modalTitleEdit;
+  document.getElementById('inputName').value = getName(t);
+  document.getElementById('inputStart').value = t.start;
+  document.getElementById('inputEnd').value = t.end;
+  document.getElementById('deleteBtn').style.display = 'flex';
+  renderIconGrid();
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function openInfoModal(){
+  document.getElementById('infoOverlay').classList.add('open');
+}
+
+function closeInfoModal(){
+  document.getElementById('infoOverlay').classList.remove('open');
+}
+
+function saveTask(){
+  const name = document.getElementById('inputName').value.trim();
+  const start = document.getElementById('inputStart').value;
+  const end = document.getElementById('inputEnd').value;
+  if(!name){ return; }
+  if(editingId){
+    const t = tasks.find(x=>x.id===editingId);
+    if(LANG === 'ar') t.nameAr = name; else t.nameEn = name;
+    t.start = start; t.end = end; t.icon = selectedIcon;
+  } else {
+    const newId = tasks.length ? Math.max(...tasks.map(t=>t.id))+1 : 1;
+    tasks.push({ id:newId, nameAr:name, nameEn:name, start, end, icon:selectedIcon, done:false });
+  }
+  closeModal();
+  render();
+}
+
+function deleteTask(){
+  tasks = tasks.filter(t=>t.id !== editingId);
+  closeModal();
+  render();
+}
+
+function resetDay(){
+  tasks.forEach(t=>t.done=false);
+  render();
+}
+
+function updateDateLabel(){
+  const today = new Date();
+  document.getElementById('dateLabel').textContent = today.toLocaleDateString(STRINGS[LANG].dateLocale, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+const saved = loadState();
+if(saved && Array.isArray(saved.tasks)){
+  if(saved.lastDate === todayKey()){
+    tasks = saved.tasks;
+  } else {
+    tasks = saved.tasks.map(t => ({...t, done:false}));
+  }
+}
+setLanguage((saved && saved.lang) || 'ar');
+</script>
+</body>
+</html>
